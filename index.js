@@ -29,6 +29,21 @@ async function run() {
         const db = client.db('smart_db');
         const productsCollection = db.collection('products');
 
+        // Get API (Get All Products)
+        app.get('/products', async (req, res) => {
+            const cursor = productsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // Get API (Get Single Product)
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productsCollection.findOne(query);
+            res.send(result);
+        })
+
         // Post API
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
