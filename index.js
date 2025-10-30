@@ -29,12 +29,29 @@ async function run() {
         const db = client.db('smart_db');
         const productsCollection = db.collection('products');
 
+        // Post API
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
         })
 
+        // Patch API
+        app.patch('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedProduct = req.body;
+            const query = { _id: new ObjectId(id) };
+            const update = {
+                $set: {
+                    name: updatedProduct.name,
+                    price: updatedProduct.price
+                }
+            }
+            const result = await productsCollection.updateOne(query, update);
+            res.send(result);
+        })
+
+        // Delete API
         app.delete('/products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
