@@ -29,6 +29,25 @@ async function run() {
         const db = client.db('smart_db');
         const productsCollection = db.collection('products');
         const bidsCollection = db.collection('bids');
+        const usersCollection = db.collection('users');
+
+        // :::::::::::::::: Users related apis ::::::::::::::::
+
+        // Post API
+        app.post('/users', async (req, res) => {
+            const newUser = req.body;
+
+            const email = req.body.email;
+            const query = { email: email };
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                res.send({ message: 'User already exists. do not need to insert again' });
+            }
+            else {
+                const result = await usersCollection.insertOne(newUser);
+                res.send(result);
+            }
+        })
 
         // :::::::::::::::: Products related apis ::::::::::::::::
 
