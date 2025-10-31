@@ -68,6 +68,13 @@ async function run() {
             res.send(result);
         })
 
+        // Get API for latest products
+        app.get('/latest-products', async (req, res) => {
+            const cursor = productsCollection.find().sort({ created_at: -1 }).limit(6);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         // Get API (Get Single Product)
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
