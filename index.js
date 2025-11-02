@@ -120,7 +120,7 @@ async function run() {
             const email = req.query.email;
             const query = {};
             if (email) {
-                query.buyer_email = email;
+                query.buyer_contact = email;
             }
 
             const cursor = bidsCollection.find(query);
