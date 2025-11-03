@@ -2,11 +2,46 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
+const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
+
+
+const serviceAccount = require("./smart-deals-firebase-admin-key.json");
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const logger = (req, res, next) => {
+    console.log('Logging Info',);
+    next();
+}
+
+const verifyFireBaseToken = async (req, res, next) => {
+    if (!req.headers.authorization) {
+        // do not allow to go
+        return res.status(401).send({ 'message': 'unauthorized access' });
+    }
+    const token = req.headers.authorization.split(' ')[1];
+    if (!token) {
+        return res.status(401).send({ 'message': 'unauthorized access' });
+    }
+
+    // verify id token
+    try {
+        const userInfo = await admin.auth().verifyIdToken(token);
+        req.token_email = userInfo.email;
+        console.log('after token validation', userInfo);
+        next();
+    }
+    catch {
+        console.log('Invalid Token');
+        return res.status(401).send({ 'message': 'unauthorized access' });
+    }
+}
 
 const uri = "mongodb+srv://smartdbUser:20gqB3EHJhR0JmjJ@cluster0.qrthjko.mongodb.net/?appName=Cluster0";
 
@@ -116,10 +151,16 @@ async function run() {
         // :::::::::::::::: Bids related apis ::::::::::::::::
 
         // Get API
-        app.get('/bids', async (req, res) => {
+        app.get('/bids', logger, verifyFireBaseToken, async (req, res) => {
+            console.log('headers', req);
             const email = req.query.email;
             const query = {};
+
             if (email) {
+                if (email !== req.token_email) {
+                    return res.status(403).send({ 'message': 'forbidded access' });
+                }
+
                 query.buyer_contact = email;
             }
 
@@ -129,7 +170,7 @@ async function run() {
         })
 
         // Get API (specific product bids)
-        app.get('/products/bids/:productId', async (req, res) => {
+        app.get('/products/bids/:productId', verifyFireBaseToken, async (req, res) => {
             const productId = req.params.productId;
             const query = { product: productId };
             const cursor = bidsCollection.find(query).sort({ bid_price: - 1 });
