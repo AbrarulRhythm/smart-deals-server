@@ -16,11 +16,6 @@ admin.initializeApp({
 app.use(cors());
 app.use(express.json());
 
-const logger = (req, res, next) => {
-    console.log('Logging Info',);
-    next();
-}
-
 const verifyFireBaseToken = async (req, res, next) => {
     if (!req.headers.authorization) {
         // do not allow to go
@@ -35,11 +30,9 @@ const verifyFireBaseToken = async (req, res, next) => {
     try {
         const userInfo = await admin.auth().verifyIdToken(token);
         req.token_email = userInfo.email;
-        console.log('after token validation', userInfo);
         next();
     }
     catch {
-        console.log('Invalid Token');
         return res.status(401).send({ 'message': 'unauthorized access' });
     }
 }
@@ -120,7 +113,7 @@ async function run() {
         })
 
         // Post API
-        app.post('/products', async (req, res) => {
+        app.post('/products', verifyFireBaseToken, async (req, res) => {
             const newProduct = req.body;
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
@@ -152,8 +145,7 @@ async function run() {
         // :::::::::::::::: Bids related apis ::::::::::::::::
 
         // Get API
-        app.get('/bids', logger, verifyFireBaseToken, async (req, res) => {
-            console.log('headers', req);
+        app.get('/bids', verifyFireBaseToken, async (req, res) => {
             const email = req.query.email;
             const query = {};
 
