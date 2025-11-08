@@ -6,8 +6,10 @@ const app = express();
 const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
 
+// index.js
+const decoded = Buffer.from(process.env.FIREBASE_SERVICE_KEY, "base64").toString("utf8");
+const serviceAccount = JSON.parse(decoded);
 
-const serviceAccount = require("./smart-deals-firebase-admin-key.json");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -85,7 +87,6 @@ async function run() {
             // const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 }
             // const cursor = productsCollection.find().sort({ price_min: 1 }).skip(3).limit(2).project(projectFields);
 
-            console.log(req.query);
             const email = req.query.email;
             const query = {};
             if (email) {
@@ -179,7 +180,7 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
     finally {
